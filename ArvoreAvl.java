@@ -1,3 +1,5 @@
+import org.w3c.dom.Node;
+
 public class ArvoreAvl {
     // definindo atributos
     private NodeTree raiz;
@@ -6,6 +8,7 @@ public class ArvoreAvl {
         this.raiz = null;
     }
     // metodo para inserir dados na arvore
+
     public void inserir(int dado){
         NodeTree no = new NodeTree(); // instancia o novo no
         no.setInformacao(dado); // seta o dado
@@ -35,7 +38,7 @@ public class ArvoreAvl {
                 }
             }
         }
-        raiz = verificarArvore(raiz); // verifica se a arvore precisa ser balanceada e atualiza a arvore
+        verificarArvore(no); // verifica se a arvore precisa ser balanceada e atualiza a arvore
     }
     // metodo pa imprimir os dados da arvore
     public void imprimir(){
@@ -50,7 +53,7 @@ public class ArvoreAvl {
         System.out.println("\n"); // pula uma linha
     }
     // metodo para imprimir pre-ordem
-    private void preOrdem(NodeTree arvore){
+    public void preOrdem(NodeTree arvore){
         if (arvore != null){ // se o no nao for nulo
             System.out.print(arvore.getInformacao() + " "); // printa a informacao
             preOrdem(arvore.getEsquerdo()); // chamada recursiva com o proximo da esquerda
@@ -163,8 +166,8 @@ public class ArvoreAvl {
         NodeTree novaRaiz = no.getDireito().getEsquerdo(); // pega a nova raiz da arvore que vai ser o neto da raiz que entrou
         NodeTree pai = no.getDireito(); // armazena o pai
         NodeTree vo = no; // armazena o vo
-        vo.setDireito(null); // anula os nos a direita do vo
-        pai.setEsquerdo(null); // anula os nos a esquerda do pai
+        pai.setEsquerdo(novaRaiz.getDireito());
+        vo.setDireito(novaRaiz.getEsquerdo());
         novaRaiz.setEsquerdo(vo);  // seta o vo a esquerda da nova raiz
         novaRaiz.setDireito(pai); // seta o pai a direita da nova raiz
         return novaRaiz; // retorna a raiz balanceada
@@ -174,8 +177,8 @@ public class ArvoreAvl {
         NodeTree novaRaiz = no.getEsquerdo().getDireito(); // pega a nova raiz da arvore que vai ser o neto da raiz que entrou
         NodeTree pai = no.getEsquerdo(); // armazena o pai
         NodeTree vo = no; // armazena o vo
-        pai.setDireito(null); // anula os nos a direita do pai
-        vo.setEsquerdo(null); // anula os nos a esquerda do vo
+        pai.setDireito(novaRaiz.getEsquerdo());
+        vo.setEsquerdo(novaRaiz.getDireito());
         novaRaiz.setDireito(vo);  // seta o vo a direita da nova raiz
         novaRaiz.setEsquerdo(pai); // seta o pai a esquerda da nova raiz
         return novaRaiz; // retorna a raiz balanceada
@@ -203,18 +206,67 @@ public class ArvoreAvl {
         return balanceado; // retorna o no balanceado
     }
     // metodo para verificar se a arvore precisa ser balanceada
-    private NodeTree verificarArvore(NodeTree no){
+    private void verificarArvore(NodeTree no){
         if(no == null){ // se o no for null
-            return null; // para o metodo
+            return; // para o metodo
         }
         int balanceamento = (altura(no.getEsquerdo()) - altura(no.getDireito())); // calcula o balanceamento do no baseado na diferenca de altura de suas duas subarvores
-        if((balanceamento == 2) || (balanceamento == -2)){ //se o balanceamento for igaul a 2 ou -2
-            no = balancear(no, balanceamento); // balanceia o no
+        NodeTree pai = encontrarPai(no);
+        if(pai != null){
+            if((balanceamento == 2) || (balanceamento == -2)){ //se o balanceamento for igaul a 2 ou -2
+                NodeTree balanceado = balancear(no, balanceamento); // balanceia o no
+                if(balanceado.getInformacao() >= pai.getInformacao()){
+                    pai.setDireito(balanceado);
+                } else {
+                    pai.setEsquerdo(balanceado);
+                }
+            }
+            verificarArvore(pai);
+        } else {
+            if((balanceamento == 2) || (balanceamento == -2)){
+                raiz = balancear(raiz, balanceamento);
+            }
         }
-        verificarArvore(no.getEsquerdo()); // chamada recursiva para verificar os nos a esquerda
-        verificarArvore(no.getDireito()); // chamada recursiva para verificar os nos a direita
-        return no; // retorna o no
     }
+    public void balancearRaiz(int balanceamento){
+        if(balanceamento == -2){ // verifica se o no esta desbalanceado para direita
+            NodeTree filho = raiz.getDireito(); // armazena o filho
+            int verificaFilho = (altura(filho.getEsquerdo()) - altura(filho.getDireito())); // verifica o balanceamento do filho
+            if(verificaFilho == 1){ // se o balanceamento do filho for 1
+                raiz = duplaRotacaoEsquerda(raiz); // faz uma dupla rotacao
+            } else { // se nao
+                raiz = rotacaoEsquerda(raiz); // faz uma rotacao simples
+            }
+        } else if(balanceamento == 2){ // verifica se o no esta desbalanceado para a esquerda
+            NodeTree filho = raiz.getEsquerdo(); // armazena o filho
+            int verificaFilho = (altura(filho.getEsquerdo()) - altura(filho.getDireito())); // verifica o balanceamento do filho
+            if(verificaFilho == -1){ // se o balanceamento do filho for -1
+                raiz = duplaRotacaoDireita(raiz); // faz uma dupla rotacao
+            } else { // se nao
+                raiz = rotacaoDireita(raiz); // faz uma rotacao simples
+            }
+        }
+    }
+    // metodo para encontra o pai de um determinado no
+    public NodeTree encontrarPai(NodeTree no) {
+        if (no == null || no == raiz) {
+            return null; // O nó alvo não tem pai ou é a raiz.
+        }
+        NodeTree percorre = raiz;
+        NodeTree pai = null;
+        while (percorre != null) {
+            if ((percorre.getEsquerdo() == no) || (percorre.getDireito() == no)) {
+                pai = percorre;
+                break; // Encontramos o pai do nó alvo.
+            } else if (no.getInformacao() >= percorre.getInformacao()) {
+                percorre = percorre.getDireito();
+            } else {
+                percorre = percorre.getEsquerdo();
+            }
+        }
+        return pai;
+    }
+
     // metodo para remover um elemento qualquer da arvore
     public void remover(int dado){
         NodeTree remover = raiz; // inicializa o no que sera removido
@@ -233,11 +285,12 @@ public class ArvoreAvl {
                 }
             }
             if(isFolha(remover)){ // se o remover for folha
-                if(pai.getInformacao() > remover.getInformacao()){ // se o pai for maior que o removido
-                    pai.setEsquerdo(null); // apago o da esquerda
+                if(remover.getInformacao() >= pai.getInformacao()){ // se o pai for maior que o removido
+                    pai.setDireito(null); // apago o da esquerda
                 } else { // se nao
-                    pai.setDireito(null); // apaga o da direita
+                    pai.setEsquerdo(null); // apaga o da direita
                 }
+                verificarArvore(pai); // balanceia a nova arvore
             } else { // se nao for folha
                 if (temEsquerdo(remover) && !temDireito(remover)){ // se o no tiver esquerdo e nao tiver direito
                     newFilho = remover.getEsquerdo(); // seta o novo filho
@@ -246,6 +299,7 @@ public class ArvoreAvl {
                     } else { // se nao
                         pai.setEsquerdo(newFilho); // seta o novo filho a esquerda do pai
                     }
+                    verificarArvore(pai); // balanceia a nova arvore
                 } else if (temDireito(remover) && !temEsquerdo(remover)){ // se tem direito e nao tem esquerdo
                     newFilho = remover.getDireito(); // seta o novo filho
                     if(newFilho.getInformacao() >= pai.getInformacao()){ // se o novo filho for maior ou igual ao pai
@@ -253,6 +307,7 @@ public class ArvoreAvl {
                     } else { // se nao
                         pai.setEsquerdo(newFilho); // seta o novo filho a esquerda do pai
                     }
+                    verificarArvore(pai); // balanceia a nova arvore
                 } else { // se o removido tiver direito e esquerdo
                     newFilho = remover.getDireito(); // seta o novo filho
                     if(isFolha(newFilho)){ // se o novo filho for folha
@@ -264,6 +319,7 @@ public class ArvoreAvl {
                         if(remover.getEsquerdo() != null){ // se o removido tiver um esquerdo
                             newFilho.setEsquerdo(remover.getEsquerdo()); //seta o esquerdo do removido a esquerda do novo filho
                         }
+                        verificarArvore(newFilho); // balanceia a nova arvore
                     }  else { // se o novo filho nao for folha
                         NodeTree menorPossivel = newFilho; // variavel para armazenar o menor possivel
                         NodeTree aux = newFilho; // auxiliar
@@ -288,11 +344,11 @@ public class ArvoreAvl {
                         // atualiza a esquerda e a direita do novo filho
                         newFilho.setEsquerdo(remover.getEsquerdo());
                         newFilho.setDireito(remover.getDireito());
+                        verificarArvore(newFilho); // balanceia a nova arvore
                     }
                 }
             }
         }
-        raiz = verificarArvore(raiz); // balanceia a nova arvore
     }
     // metodo para verificar se o no tem direito
     private boolean temDireito(NodeTree arvore){
