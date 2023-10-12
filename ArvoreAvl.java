@@ -42,6 +42,7 @@ public class ArvoreAvl {
     }
     // metodo pa imprimir os dados da arvore
     public void imprimir(){
+        System.out.println("Árvore AVL:");
         System.out.print("Pré-ordem: "); // tipo de organizacao
         preOrdem(raiz); // metodo que imprime
         System.out.println("\n"); // pula uma linha
@@ -132,6 +133,7 @@ public class ArvoreAvl {
             } else { // se tiver direito e nao tiver esquerdo
                 raiz = raiz.getDireito(); // percorre um no
             }
+            verificarArvore(raiz);
         }
     }
     // metodo para calcular altura da arvore
@@ -228,6 +230,23 @@ public class ArvoreAvl {
             }
         }
     }
+    // metodo para buscar um elemento na arvore
+    public int buscar(int dado){
+        int resultado;
+        NodeTree percorre = raiz;
+        while(true){
+            if(percorre.getInformacao() == dado){
+                resultado = dado;
+                break;
+            }
+            if(dado >= percorre.getInformacao()){
+                percorre = percorre.getDireito();
+            } else if (dado < percorre.getInformacao()){
+                percorre = percorre.getEsquerdo();
+            }
+        }
+        return resultado;
+    }
     public void balancearRaiz(int balanceamento){
         if(balanceamento == -2){ // verifica se o no esta desbalanceado para direita
             NodeTree filho = raiz.getDireito(); // armazena o filho
@@ -269,83 +288,73 @@ public class ArvoreAvl {
 
     // metodo para remover um elemento qualquer da arvore
     public void remover(int dado){
-        NodeTree remover = raiz; // inicializa o no que sera removido
-        NodeTree pai = raiz; // inicializa o pai do removido
-        NodeTree newFilho; // inicializa o novo filho
-        if(dado == raiz.getInformacao()){ // se o dado coincidir com a raiz
-            removerRaiz(); // remove a raiz
-        } else{ // se nao
-            while(dado != remover.getInformacao()){ // enquanto eu nao encontrar o dado na arvore
-                if(dado > remover.getInformacao()){ // se o dado for maior que o que esta no remover
-                    pai = remover; // atualiza o pai
-                    remover = remover.getDireito(); // caminha pra direita
-                } else { // se nao
-                    pai = remover; // atualiza o pai
-                    remover = remover.getEsquerdo(); // caminha pra esquerda
+        NodeTree remover = raiz;
+        NodeTree pai = raiz;
+        NodeTree newFilho;
+        if(dado == raiz.getInformacao()){
+            removerRaiz();
+        } else {
+            while(dado != remover.getInformacao()){
+                if(dado >= remover.getInformacao()){
+                    pai = remover;
+                    remover = remover.getDireito();
+                } else {
+                    pai = remover;
+                    remover = remover.getEsquerdo();
                 }
             }
-            if(isFolha(remover)){ // se o remover for folha
-                if(remover.getInformacao() >= pai.getInformacao()){ // se o pai for maior que o removido
-                    pai.setDireito(null); // apago o da esquerda
-                } else { // se nao
-                    pai.setEsquerdo(null); // apaga o da direita
+        }
+        if(isFolha(remover)){
+            if(remover.getInformacao() >= pai.getInformacao()){ // se o pai for maior que o removido
+                pai.setDireito(null); // apago o da esquerda
+            } else { // se nao
+                pai.setEsquerdo(null); // apaga o da direita
+            }
+        } else {
+            if(temDireito(remover) && !temEsquerdo(remover)){
+                newFilho = remover.getDireito();
+                if(newFilho.getInformacao() >= pai.getInformacao()){
+                    pai.setDireito(newFilho);
+                } else {
+                    pai.setEsquerdo(newFilho);
                 }
-                verificarArvore(pai); // balanceia a nova arvore
-            } else { // se nao for folha
-                if (temEsquerdo(remover) && !temDireito(remover)){ // se o no tiver esquerdo e nao tiver direito
-                    newFilho = remover.getEsquerdo(); // seta o novo filho
-                    if(newFilho.getInformacao() >= pai.getInformacao()){ // se o novo filho for maior ou igual ao pai
-                        pai.setDireito(newFilho); // seta o novo filho a direita do pai
-                    } else { // se nao
-                        pai.setEsquerdo(newFilho); // seta o novo filho a esquerda do pai
+                verificarArvore(pai);
+            } else if (!temDireito(remover) && temEsquerdo(remover)){
+                newFilho = remover.getEsquerdo();
+                if(newFilho.getInformacao() >= pai.getInformacao()){
+                    pai.setDireito(newFilho);
+                } else {
+                    pai.setEsquerdo(newFilho);
+                }
+                verificarArvore(pai);
+            } else {
+                newFilho = remover.getDireito();
+                if(isFolha(newFilho) || (!temEsquerdo(newFilho) && temDireito(newFilho))){
+                    if(newFilho.getInformacao() >= pai.getInformacao()){
+                        pai.setDireito(newFilho);
+                    } else {
+                        pai.setEsquerdo(newFilho);
                     }
-                    verificarArvore(pai); // balanceia a nova arvore
-                } else if (temDireito(remover) && !temEsquerdo(remover)){ // se tem direito e nao tem esquerdo
-                    newFilho = remover.getDireito(); // seta o novo filho
-                    if(newFilho.getInformacao() >= pai.getInformacao()){ // se o novo filho for maior ou igual ao pai
-                        pai.setDireito(newFilho); // seta o novo filho a direita do pai
-                    } else { // se nao
-                        pai.setEsquerdo(newFilho); // seta o novo filho a esquerda do pai
+                    newFilho.setEsquerdo(remover.getEsquerdo());
+                    verificarArvore(newFilho);
+                } else {
+                    NodeTree menorPossivel = newFilho;
+                    NodeTree paiMenorPossivel = newFilho;
+                    while(menorPossivel.getEsquerdo() != null){
+                        paiMenorPossivel = menorPossivel;
+                        menorPossivel = menorPossivel.getEsquerdo();
                     }
-                    verificarArvore(pai); // balanceia a nova arvore
-                } else { // se o removido tiver direito e esquerdo
-                    newFilho = remover.getDireito(); // seta o novo filho
-                    if(isFolha(newFilho)){ // se o novo filho for folha
-                        if(newFilho.getInformacao() >= pai.getInformacao()){ // se o novo filho for maior ou igual ao pai
-                            pai.setDireito(newFilho); // seta o novo filho a direita do pai
-                        } else { // se nao
-                            pai.setEsquerdo(newFilho); // seta o novo filho a esquerda do pai
-                        }
-                        if(remover.getEsquerdo() != null){ // se o removido tiver um esquerdo
-                            newFilho.setEsquerdo(remover.getEsquerdo()); //seta o esquerdo do removido a esquerda do novo filho
-                        }
-                        verificarArvore(newFilho); // balanceia a nova arvore
-                    }  else { // se o novo filho nao for folha
-                        NodeTree menorPossivel = newFilho; // variavel para armazenar o menor possivel
-                        NodeTree aux = newFilho; // auxiliar
-                        while (true){
-                            if(menorPossivel.getEsquerdo() != null){ // enquanto nao for o menor possivel
-                                aux = menorPossivel; // armazena na auxiliar
-                                menorPossivel = menorPossivel.getEsquerdo(); // percorre
-                            }
-                            if(menorPossivel.getEsquerdo() == null || isFolha(menorPossivel)){ // se o menor passivel for o ultimo a esquerda ou for uma folha
-                                break; // para o loop
-                            }
-                        }
-                        if(menorPossivel.getDireito() != null){ // se tiver algum no a direita do menor possivel
-                            aux.setEsquerdo(menorPossivel.getDireito()); // seta o no a esquerda do auxiliar
-                        }
-                        newFilho = menorPossivel; // novo filho vira o menor passivel
-                        if(newFilho.getInformacao() >= pai.getInformacao()){ // se o novo filho for maior ou igual ao pai
-                            pai.setDireito(newFilho); // insere a direita do pai
-                        } else { // se nao
-                            pai.setEsquerdo(newFilho); // seta a esquerda do pai
-                        }
-                        // atualiza a esquerda e a direita do novo filho
-                        newFilho.setEsquerdo(remover.getEsquerdo());
-                        newFilho.setDireito(remover.getDireito());
-                        verificarArvore(newFilho); // balanceia a nova arvore
+                    paiMenorPossivel.setEsquerdo(menorPossivel.getDireito());
+                    verificarArvore(paiMenorPossivel);
+                    newFilho = menorPossivel;
+                    if(newFilho.getInformacao() >= pai.getInformacao()){
+                        pai.setDireito(newFilho);
+                    } else {
+                        pai.setEsquerdo(newFilho);
                     }
+                    newFilho.setDireito(remover.getDireito());
+                    newFilho.setEsquerdo(remover.getEsquerdo());
+                    verificarArvore(newFilho);
                 }
             }
         }
