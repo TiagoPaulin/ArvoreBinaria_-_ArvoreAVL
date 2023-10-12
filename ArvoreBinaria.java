@@ -38,6 +38,7 @@ public class ArvoreBinaria {
     }
     // metodo pa imprimir os dados da arvore
     public void imprimir(){
+        System.out.println("Árvore Binária: ");
         System.out.print("Pré-ordem: "); // tipo de organizacao
         preOrdem(raiz); // metodo que imprime
         System.out.println("\n"); // pula uma linha
@@ -231,6 +232,23 @@ public class ArvoreBinaria {
         } else { // se nao
             return false; // nao e folha
         }
+    }
+    // metodo para buscar um elemenrto na arvore
+    public int buscar(int dado){
+        int resultado;
+        NodeTree percorre = raiz;
+        while(true){
+            if(percorre.getInformacao() == dado){
+                resultado = dado;
+                break;
+            }
+            if(dado >= percorre.getInformacao()){
+                percorre = percorre.getDireito();
+            } else if (dado < percorre.getInformacao()){
+                percorre = percorre.getEsquerdo();
+            }
+        }
+        return resultado;
     }
     // metodo get da arvore
     public NodeTree getRaiz() {
